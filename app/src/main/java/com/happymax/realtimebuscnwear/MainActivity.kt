@@ -3,15 +3,13 @@
  * most up to date changes to the libraries and their usages.
  */
 
-package com.example.realtimebuscn.presentation
+package com.happymax.realtimebuscnwear
 
-import android.accessibilityservice.GestureDescription
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,15 +21,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
@@ -39,7 +34,6 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,20 +41,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.AutoCenteringParams
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
-import androidx.wear.compose.foundation.lazy.TransformingLazyColumnState
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.foundation.pager.HorizontalPager
@@ -81,13 +71,11 @@ import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.PagerScaffoldDefaults
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.ScreenScaffoldDefaults.contentPadding
-import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import androidx.wear.tooling.preview.devices.WearDevices
-import com.example.realtimebuscn.R
-import com.example.realtimebuscn.presentation.theme.RealTimeBusCNTheme
+import com.happymax.realtimebuscnwear.theme.RealTimeBusCNTheme
 import kotlin.time.Duration.Companion.minutes
 import androidx.wear.compose.material.*
 
@@ -182,7 +170,7 @@ fun HomeScreen(onSearch: () -> Unit, onFavouriteListItemClicked: () -> Unit, onN
     AppScaffold {
         ScreenScaffold(
             scrollState = listState,
-            timeText = { null }
+            timeText = { null },
         ) {
                 paddingValues ->
             Column(

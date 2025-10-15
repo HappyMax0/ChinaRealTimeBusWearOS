@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.realtimebuscn"
+    namespace = "com.happymax.realtimebuscnwear"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.realtimebuscn"
+        applicationId = "com.happymax.realtimebuscnwear"
         minSdk = 30
         targetSdk = 35
         versionCode = 1
@@ -27,11 +27,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "21"
     }
     buildFeatures {
         compose = true
@@ -39,6 +39,8 @@ android {
 }
 
 dependencies {
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.google.code.gson:gson:2.11.0")
     implementation(libs.compose.navigation)
     implementation(libs.play.services.wearable)
     implementation(platform(libs.compose.bom))

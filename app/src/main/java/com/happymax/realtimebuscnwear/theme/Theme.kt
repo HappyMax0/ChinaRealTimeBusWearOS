@@ -1,4 +1,4 @@
-package com.example.realtimebuscn.presentation.theme
+package com.happymax.realtimebuscnwear.theme
 
 import androidx.compose.runtime.Composable
 import androidx.wear.compose.material.MaterialTheme

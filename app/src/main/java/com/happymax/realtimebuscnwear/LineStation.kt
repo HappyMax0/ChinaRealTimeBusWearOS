@@ -1,4 +1,4 @@
-package com.example.realtimebuscn.presentation
+package com.happymax.realtimebuscnwear
 
 import kotlin.time.Duration
 

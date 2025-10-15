@@ -1,5 +1,3 @@
-package com.example.realtimebuscn.presentation
-
-import java.time.LocalTime
+package com.happymax.realtimebuscnwear
 
 data class Line(val name:String, var terminal:String, val station:List<LineStation>)

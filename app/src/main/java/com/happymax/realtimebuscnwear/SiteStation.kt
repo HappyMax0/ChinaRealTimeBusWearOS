@@ -1,3 +1,3 @@
-package com.example.realtimebuscn.presentation
+package com.happymax.realtimebuscnwear
 
 data class SiteStation(val name:String, val lineList:MutableList<LineStation>)

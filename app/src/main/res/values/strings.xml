@@ -1,11 +1,9 @@
 <resources>
-    <string name="app_name">SHRealTimeBus</string>
+    <string name="app_name">RealTimeBusCN</string>
     <!--
     This string is used for square devices and overridden by hello_world in
     values-round/strings.xml for round devices.
     -->
-    <string name="hello_world">From the Square world,\nHello, %1$s!</string>
-
     <string name="search">Search</string>
     <string name="searchSomeThing">Input to Search</string>
     <string name="favourites">Favourites</string>
@@ -15,8 +13,10 @@
     <string name="unFavorite">UnFavorite</string>
     <string name="forward">Forward</string>
     <string name="reverse">Reverse</string>
-    <string name="location">Location</string>
+    <string name="city">City</string>
     <string name="language">Language</string>
     <string name="about">About</string>
-
+    <string name="bus_stop_list">Bus Stop</string>
+    <string name="input_site_name">Input Site Name</string>
+    <string name="delete">Delete</string>
 </resources>

@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,34 +25,37 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.wear.compose.foundation.lazy.AutoCenteringParams
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
-import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.foundation.pager.HorizontalPager
 import androidx.wear.compose.foundation.pager.rememberPagerState
@@ -59,7 +63,6 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Card
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.PositionIndicator
 import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
@@ -76,11 +79,22 @@ import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.happymax.realtimebuscnwear.theme.RealTimeBusCNTheme
-import kotlin.time.Duration.Companion.minutes
 import androidx.wear.compose.material.*
+import kotlinx.coroutines.launch
+import android.content.Context
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.wear.compose.foundation.lazy.ScalingLazyListState
+import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
+
+
+// At the top level of your kotlin file:
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        
         installSplashScreen()
 
         super.onCreate(savedInstanceState)
@@ -106,7 +120,7 @@ AppScaffold {
     ) {
         // TODO: build navigation graph
         composable("home") {
-            HomeScreen({ navController.navigate("search") }, { navController.navigate("details/28路") },  { navController.navigate("station/杨树浦路眉州路")})
+            HomeScreen(LocalContext.current, { navController.navigate("search") }, { navController.navigate("site/28路/杨树浦路眉州路")})
         }
         composable("details/{line}") {
                 backStackEntry ->
@@ -132,11 +146,11 @@ AppScaffold {
             // 从 backStackEntry 中获取参数
             val stationName = backStackEntry.arguments?.getString("name")
             stationName?.let {
-                StationPage(stationName, { navController.navigate("site/28路/杨树浦路眉州路") })
+
             }
         }
         composable("search") {
-            SearchPage({ result -> navController.navigate("searchResult/result") }, { navController.navigate("home") })
+            SearchPage({ result -> navController.navigate("home/$result") })
         }
         composable("searchResult/{query}") {
                 backStackEntry ->
@@ -149,23 +163,32 @@ AppScaffold {
         }
     }
 }
-
 }
 
 @Composable
-fun HomeScreen(onSearch: () -> Unit, onFavouriteListItemClicked: () -> Unit, onNearbyListItemClicked: () -> Unit){
-    val line1 = LineStation("28路", "杨树浦路眉州路", "包头路嫩江路", 9,  19.minutes)
-    val line2 = LineStation("135路", "杨树浦路眉州路", "杨树浦路黎平路", 5,  10.minutes)
-    val stationsList = mutableListOf<LineStation>(line1, line2)
+fun HomeScreen(context: Context, onAddSiteClick: () -> Unit, onFavouriteListItemClicked: () -> Unit, viewModel: BusViewModel = viewModel()){
+    // 收集 ViewModel 中的 UI 狀態
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    var site1 = SiteStation("杨树浦路眉州路",  mutableListOf<LineStation>(line1, line2))
+    val busList = mutableListOf<LolimiBusApiParam>()
 
-    val siteList = mutableListOf<SiteStation>(site1)
+    // 使用 LaunchedEffect 在 Composable 首次加載時觸發一次數據請求
+    // 這裡我們硬編碼了參數，你也可以換成 TextField 讓用戶輸入
+    LaunchedEffect(Unit) {
+
+        for(site in LolimiBusApi.getList(context.dataStore)){
+            busList.add(LolimiBusApiParam(type = "json", // 範例參數
+                city = "上海",
+                line = site.name,
+                o = if(site.isReverse) "2" else "1" ))
+        }
+
+        viewModel.fetchBusListData(busList)
+    }
 
     val pageCount = 3
     val pagerState = rememberPagerState { pageCount }
-
-    val listState = rememberTransformingLazyColumnState()
+    val listState = rememberScalingLazyListState()
 
     AppScaffold {
         ScreenScaffold(
@@ -185,9 +208,29 @@ fun HomeScreen(onSearch: () -> Unit, onFavouriteListItemClicked: () -> Unit, onN
                         PagerScaffoldDefaults.snapWithSpringFlingBehavior(state = pagerState),
                 ) { page ->
                     when (page) {
-                        0 -> FavouriteList(stationsList, onSearch, onFavouriteListItemClicked)
-                        1 -> NearbyList(siteList, onSearch, onNearbyListItemClicked)
-                        2 -> SettingsPage()
+                        0 -> {
+                            when (val state = uiState) {
+                                is BusUiState.Loading -> {
+                                    // 1. 加載中狀態
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
+                                is BusUiState.Success -> {
+                                    // 2. 成功狀態
+                                    ShowLineList(listState, state.responseList, onFavouriteListItemClicked)
+                                }
+                                is BusUiState.Error -> {
+                                    // 3. 錯誤狀態
+                                    ErrorScreen(state.message)
+                                }
+                            }
+                        }
+                        1 -> AddSiteList(listState, context, onAddSiteClick)
+                        2 -> SettingsPage(listState)
                     }
                 }
 
@@ -204,10 +247,9 @@ fun HomeScreen(onSearch: () -> Unit, onFavouriteListItemClicked: () -> Unit, onN
 }
 
 @Composable
-fun SettingsPage(){
-    val listState = rememberTransformingLazyColumnState()
+fun SettingsPage(listState: ScalingLazyListState){
 
-    TransformingLazyColumn(
+    ScalingLazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -216,20 +258,20 @@ fun SettingsPage(){
             ListHeader { Text(stringResource(R.string.settings)) }
         }
         item{
-            OvalButton(Icons.Filled.LocationOn, stringResource(R.string.location), { })
+            OvalButton(painterResource(R.drawable.location_city_24px), stringResource(R.string.city), { })
         }
         item{
-            OvalButton(Icons.Filled.Settings, stringResource(R.string.language), { })
+            OvalButton(painterResource(R.drawable.g_translate_24px), stringResource(R.string.language), { })
         }
         item{
-            OvalButton(Icons.Filled.Info, stringResource(R.string.about), { })
+            OvalButton(painterResource(R.drawable.info_24px), stringResource(R.string.about), { })
         }
     }
 }
 
 @Composable
 fun OvalButton(
-    imageVector: ImageVector,
+    imageVector: Painter,
     contentDescription: String?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -246,7 +288,7 @@ fun OvalButton(
     ) {
         Row {
             Icon(
-                imageVector = imageVector,
+                imageVector,
                 contentDescription = contentDescription
             )
             Text(text = contentDescription.toString(), modifier = Modifier)
@@ -290,9 +332,9 @@ fun SitePage(lineName:String, site:String){
             }
             item {
                 Row{
-                    RoundToggleButton(Icons.Filled.FavoriteBorder, stringResource(R.string.unFavorite), Icons.Filled.Favorite, stringResource(R.string.favorite), { } )
+                    RoundToggleButton(false, painterResource(R.drawable.favorite_24px), stringResource(R.string.unFavorite), painterResource(R.drawable.favorite_24px), stringResource(R.string.favorite), { } )
 
-                    RoundToggleButton(Icons.AutoMirrored.Filled.ArrowForward, stringResource(R.string.forward), Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.reverse), { } )
+                    RoundToggleButton(false, painterResource(R.drawable.swap_horiz_24px), stringResource(R.string.forward), painterResource(R.drawable.swap_horiz_24px), stringResource(R.string.reverse), { } )
 
                 }
             }
@@ -301,113 +343,254 @@ fun SitePage(lineName:String, site:String){
 }
 
 @Composable
-fun RoundToggleButton(unToggledIcon: ImageVector, unToggledDescription: String, toggledIcon: ImageVector, toggledDescription: String, onToggled: () -> Unit){
-    var isToggled by remember { mutableStateOf(false) }
+fun RoundToggleButton(state: Boolean, unToggledIcon: Painter, unToggledDescription: String, toggledIcon: Painter, toggledDescription: String, onToggled: (Boolean) -> Unit){
+    var isToggled by remember { mutableStateOf(state) }
 
     ToggleButton(
         checked = isToggled,
         onCheckedChange = {
             isToggled = it
-            onToggled },
-        modifier = Modifier.padding(8.dp)
+            onToggled(it) },
+        modifier = Modifier.size(24.dp)
     ) {
         // 根据选中状态显示不同图标
         val icon = if (isToggled) toggledIcon else unToggledIcon
         Icon(
-            imageVector = icon,
+            icon,
             contentDescription = if (isToggled) toggledDescription else unToggledDescription,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(14.dp)
         )
     }
 }
 
 @Composable
-fun NearbyList(siteList:MutableList<SiteStation>, onSearch: () -> Unit, onItemClicked: () -> Unit){
-    val listState = rememberTransformingLazyColumnState()
-    TransformingLazyColumn( modifier = Modifier.fillMaxSize(),
-        state = listState,
+fun AddSiteList(listState: ScalingLazyListState, context: Context, onAddSite: () -> Unit){
+
+    var inputText by remember { mutableStateOf("") }
+    var showInputField by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
+    // 1. 建立一個標記，用來追蹤是否「曾經」獲得過焦點
+    var hasGainedFocus by remember { mutableStateOf(false) }
+
+    var siteList = remember { mutableStateListOf<Site>() }
+
+    LaunchedEffect(Unit){
+        siteList.clear()
+
+        for(site in LolimiBusApi.getList(context.dataStore)){
+            siteList.add(site)
+        }
+
+    }
+
+    ScalingLazyColumn(modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(4.dp),
         horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
         item {
-            SearchButton(onSearch)
-        }
-        item{
-            ListHeader { Text(stringResource(R.string.nearby)) }
-        }
-        items(siteList.size){
-                index -> Card(onClick = onItemClicked) {
-            Column {
-                Text(siteList[index].name)
-                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Top) {
-                    siteList[index].lineList.forEach { line ->
-                        Row(modifier = Modifier
-                            .padding(vertical = 10.dp)
-                            .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween) {
-                            Column {
-                                Text(line.name)
-                                Text(line.terminalStation)
-                            }
-                            Row {
-                                Text(line.remainStations.toString())
-                                Text("·")
-                                Text(line.remainTime.toString())
-                            }
+            ListHeader{
+                if (!showInputField) {
+                    hasGainedFocus = false
+                    AddButton({
+                        showInputField = true
+                    })
+                }
+                else{
+                    // 顯示輸入框
+                    Card(
+                        onClick = { /* 防止點擊穿透 */ },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        var text by remember { mutableStateOf("") }
+                        OutlinedTextField(
+                            value = text,
+                            onValueChange = { text = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester).onFocusChanged{ focusState ->
+                                    if (focusState.isFocused) {
+                                        // 2. 只要一獲得焦點，就將標記設為 true
+                                        hasGainedFocus = true
+                                    }
+
+                                    if(!focusState.isFocused && hasGainedFocus && showInputField)
+                                        showInputField = false;
+                                },
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Done, // 回車鍵顯示為「完成」
+                                keyboardType = KeyboardType.Text
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    inputText = text
+
+                                    keyboardController?.hide()
+                                    siteList.add(Site(inputText, false))
+
+                                    coroutineScope.launch {
+                                        LolimiBusApi.saveList( context.dataStore, siteList)
+                                    }
+
+                                    showInputField = false
+                                }
+                            ),
+                            singleLine = true,
+                            placeholder = { Text(stringResource(R.string.input_site_name)) }
+                        )
+
+                        // 3. 使用 LaunchedEffect 在 Composable 首次出現時請求焦點
+                        //    這會在這個 OutlinedTextField 被組合*之後*才運行
+                        LaunchedEffect(Unit) {
+                            focusRequester.requestFocus()
+                            keyboardController?.show()
                         }
                     }
                 }
             }
         }
+        items(siteList.size){ index ->
+            val site = siteList[index] // 獲取當前 site
+
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(site.name)
+
+                RoundToggleButton(site.isReverse, painterResource(R.drawable.swap_horiz_24px), stringResource(R.string.forward), painterResource(R.drawable.swap_horiz_24px), stringResource(R.string.reverse),
+                    {
+                        siteList[index] = site.copy(isReverse = it)
+                        coroutineScope.launch {
+                            LolimiBusApi.saveList( context.dataStore, siteList)
+                        }
+                } )
+
+                DeleteButton({
+                    siteList.removeAt(index)
+                    coroutineScope.launch {
+                        LolimiBusApi.saveList( context.dataStore, siteList)
+                    }
+                })
+            }
         }
     }
 }
 
 @Composable
-fun FavouriteList(busList:MutableList<LineStation>, onSearch: () -> Unit, onItemClicked: () -> Unit){
+fun ErrorScreen(errorText:String){
     val listState = rememberTransformingLazyColumnState()
 
-    TransformingLazyColumn(
-        modifier = Modifier.fillMaxSize(),
+    TransformingLazyColumn( modifier = Modifier.fillMaxSize(),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(4.dp),
         horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
         item{
-            ListHeader { Text(stringResource(R.string.favourites)) }
+            ListHeader { Text(stringResource(R.string.nearby)) }
         }
-        items(busList.size){
-                index -> Card(onClick = onItemClicked) {
-            Row(modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
-                    Text(busList[index].name)
-                    Text(busList[index].stationName)
-                    Text(busList[index].terminalStation)
-                }
-
-                Row {
-                    Text(busList[index].remainStations.toString())
-                    Text("·")
-                    Text(busList[index].remainTime.toString())
-                }
-            }
-
-        }
+       item{
+           Box(
+               modifier = Modifier
+                   .fillMaxSize()
+                   .padding(16.dp),
+               contentAlignment = Alignment.Center
+           ) {
+               Text(
+                   text = "GetError: ${errorText}"
+               )
+           }
         }
     }
 }
 
 @Composable
-fun SearchButton(onClick: () -> Unit){
+fun ShowLineList(listState: ScalingLazyListState, responseList:MutableList<BusResponse?>, onItemClicked: () -> Unit){
+
+    ScalingLazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+        state = listState
+    ) {
+        item {
+            ListHeader { Text(stringResource(R.string.bus_stop_list)) }
+        }
+        items(responseList.size) { index ->
+            Card(onClick = onItemClicked) {
+                LineItem(responseList[index])
+            }
+        }
+    }
+}
+
+@Composable
+fun LineItem(response:BusResponse?){
+    Column {
+        /*Row(modifier = Modifier
+            .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween) {
+            response?.line?.let { Text(it) }
+            RoundToggleButton(false, painterResource(R.drawable.swap_horiz_24px), stringResource(R.string.forward), painterResource(R.drawable.swap_horiz_24px), stringResource(R.string.reverse), { } )
+        }*/
+
+        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Top) {
+            response?.data?.forEach { busInfo ->
+                Row(modifier = Modifier
+                    .padding(vertical = 5.dp)
+                    .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row {
+                        Text(busInfo.lines, fontSize = 12.sp)
+                        Text("->")
+                        Text(busInfo.endSn, fontSize = 12.sp)
+                    }
+                    Column {
+                        Text(busInfo.surplus, fontSize = 12.sp)
+                        Text(busInfo.travelTime, fontSize = 12.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DeleteButton(onClick: () -> Unit){
     Button(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(0.6f).padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth(0.6f).width(24.dp).height(24.dp)
     ) {
         Row(
             modifier = Modifier.wrapContentSize(),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.Search,
+                painterResource(R.drawable.delete_24px),
+                contentDescription = stringResource(R.string.delete),
+                modifier = Modifier.size(14.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun AddButton(onClick: () -> Unit){
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth(0.6f)
+            .padding(vertical = 4.dp),
+    ) {
+        Row(
+            modifier = Modifier.wrapContentSize(),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            Icon(
+                painterResource(R.drawable.add_24px),
                 contentDescription = stringResource(R.string.search),
                 modifier = Modifier.size(24.dp)
             )
@@ -416,67 +599,60 @@ fun SearchButton(onClick: () -> Unit){
 }
 
 @Composable
-fun SearchPage(onSubmit: (String) -> Unit, onCancel: () -> Unit){
-    val listState = rememberScalingLazyListState()
+fun SearchPage(onSubmit: (String) -> Unit){
+    val listState = rememberTransformingLazyColumnState()
+    val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
+    var searchText by remember { mutableStateOf("") }
 
-    // 使用 Scaffold 包裹整个屏幕，提供 Wear OS 统一的界面框架
-    Scaffold(
-        // 提供一个 Vingnette 来模拟屏幕边缘的暗角效果，增强沉浸感
-        vignette = { Vignette(vignettePosition = VignettePosition.TopAndBottom) },
-        // 提供一个 TimeText 来显示当前时间
-        timeText = { TimeText() },
-        positionIndicator = {
-            // 提供一个位置指示器，显示当前列表滚动的位置
-            PositionIndicator(scalingLazyListState = listState)
+    LaunchedEffect(Unit){
+        focusRequester.requestFocus()
+    }
+
+    TransformingLazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        state = listState,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally){
+        // 在列表顶部添加一个占位符，使搜索框更靠近顶部
+        item {
+            Spacer(Modifier.height(16.dp))
         }
-    ) {
-        var searchText by remember { mutableStateOf("") }
-        // 使用 ScalingLazyColumn 作为主要内容布局，它专为 Wear OS 优化
-        ScalingLazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = listState,
-            autoCentering = AutoCenteringParams(itemIndex = 0),
-            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
-        ) {
-            // 在列表顶部添加一个占位符，使搜索框更靠近顶部
-            item {
-                Spacer(Modifier.height(16.dp))
-            }
-            item {
-                // 使用 OutlinedTextField 作为搜索框
-                OutlinedTextField(
-                    value = searchText,
-                    onValueChange = { searchText = it },
-                    label = {
-                        Text(
-                            text = stringResource(R.string.search),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth(0.9f) // 限制宽度，防止内容溢出
-                        .padding(horizontal = 8.dp),
-                    // 在搜索框左侧添加搜索图标
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search"
-                        )
-                    },
-                    shape = RoundedCornerShape(24.dp),
-                    // 配置键盘，在点击“搜索”后收起键盘
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(
-                        onSearch = {
-                            onSubmit(searchText)
-                            // 这里可以处理搜索逻辑，例如发起网络请求
-                            keyboardController?.hide() // 收起键盘
-                        },
+        item {
+            // 使用 OutlinedTextField 作为搜索框
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = { searchText = it },
+                label = {
+                    Text(
+                        text = stringResource(R.string.search),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
+                },
+                modifier = Modifier
+                    .focusRequester(focusRequester)
+                    .fillMaxWidth(0.9f) // 限制宽度，防止内容溢出
+                    .padding(horizontal = 8.dp),
+                // 在搜索框左侧添加搜索图标
+                leadingIcon = {
+                    Icon(
+                        painterResource(R.drawable.search_24px),
+                        contentDescription = "Search"
+                    )
+                },
+                shape = RoundedCornerShape(24.dp),
+                // 配置键盘，在点击“搜索”后收起键盘
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        onSubmit(searchText)
+
+                        // 这里可以处理搜索逻辑，例如发起网络请求
+                        keyboardController?.hide() // 收起键盘
+                    },
                 )
-            }
+            )
         }
     }
 }
@@ -523,21 +699,9 @@ private fun ResultsScreen(query: String, onBack: () -> Unit) {
 
 @Composable
 fun LineDetailPage(lineName:String, onItemClicked: () -> Unit){
+
     val listState = rememberTransformingLazyColumnState()
     val terminalStation:String = "包头路嫩江路"
-    val station1 = LineStation(lineName, "提篮桥", terminalStation, 9,  19.minutes)
-    val station2 = LineStation(lineName, "临潼路杨树浦路", terminalStation, 9,  19.minutes)
-    val station3 = LineStation(lineName, "杨树浦路大连路", terminalStation, 9,  19.minutes)
-    val station4 = LineStation(lineName, "杨树浦路许昌路", terminalStation, 9,  19.minutes)
-    val station5 = LineStation(lineName, "杨树浦路江浦路", terminalStation, 9,  19.minutes)
-    val station6 = LineStation(lineName, "杨树浦路眉州路", terminalStation, 9,  19.minutes)
-    val station7 = LineStation(lineName, "杨树浦路松潘路", terminalStation, 9,  19.minutes)
-    val station8 = LineStation(lineName, "杨树浦路临青路", terminalStation, 9,  19.minutes)
-    val station9 = LineStation(lineName, "杨树浦路宁武路", terminalStation, 9,  19.minutes)
-    val station10 = LineStation(lineName, "隆昌路杨树浦路", terminalStation, 9,  19.minutes)
-
-    val stations:List<LineStation> = listOf(station1, station2, station3, station4, station5, station6, station7, station8, station9, station10)
-    var line = Line(lineName, terminalStation, stations)
 
     ScreenScaffold(
         scrollState = listState,
@@ -553,73 +717,14 @@ fun LineDetailPage(lineName:String, onItemClicked: () -> Unit){
 
                 }
             }
-            items(stations.size){
-                    index -> Card(onClick = onItemClicked) {
-                Row(modifier = Modifier
-                    .padding(vertical = 10.dp)
-                    .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween) {
-                    Column {
-                        Text(stations[index].stationName)
-                    }
-                    Row {
-                        Text(stations[index].remainStations.toString())
-                        Text("·")
-                        Text(stations[index].remainTime.toString())
-                    }
-                }
-            }
-            }
+
         }
     }
-
 }
 
-@Composable
-fun StationPage(stationName:String, onItemClicked: () -> Unit){
-    val line1 = LineStation("28路", stationName, "包头路嫩江路", 9,  19.minutes)
-    val line2 = LineStation("135路", stationName, "杨树浦路黎平路", 5,  10.minutes)
-    val lineList = mutableListOf<LineStation>(line1, line2)
-
-    val listState = rememberTransformingLazyColumnState()
-    ScreenScaffold(
-        scrollState = listState,
-    ) { paddingValues ->
-        TransformingLazyColumn(state = listState,
-            contentPadding = contentPadding) {
-            item{
-                ListHeader {
-                    Column {
-                        Text(stationName)
-                    }
-
-                }
-            }
-            items(lineList.size){
-                    index -> Card(onClick = onItemClicked) {
-                Row(modifier = Modifier
-                    .padding(vertical = 10.dp)
-                    .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween) {
-                    Column {
-                        Text(lineList[index].name)
-                        Text(lineList[index].terminalStation)
-                    }
-                    Row {
-                        Text(lineList[index].remainStations.toString())
-                        Text("·")
-                        Text(lineList[index].remainTime.toString())
-                    }
-                }
-            }
-            }
-        }
-    }
-
-}
 
 @Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
 fun DefaultPreview() {
-    SitePage("28", "杨树浦路眉州路")
+
 }

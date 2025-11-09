@@ -39,8 +39,10 @@ class BusViewModel() : ViewModel() {
                     val response = LolimiBusApi.getBusData(bus.type, bus.city, bus.line, bus.o)
                     if(response != null && response.code == 200)
                         responseList.add(response)
+                    else
+                        responseList.add(BusResponse(response?.code ?: 0, bus.city,  bus.line, 0, emptyList()))
                 }
-                var first = responseList.first()
+
                 // 檢查 API 內部的 code (可選，但建議)
                 if (responseList.isNotEmpty()) {
                     _uiState.update { BusUiState.Success(responseList) }

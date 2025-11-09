@@ -82,8 +82,16 @@ import com.happymax.realtimebuscnwear.theme.RealTimeBusCNTheme
 import androidx.wear.compose.material.*
 import kotlinx.coroutines.launch
 import android.content.Context
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextField
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.wear.compose.foundation.lazy.ScalingLazyListState
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
@@ -249,9 +257,9 @@ fun SettingsPage(listState: ScalingLazyListState, onCityiesSettingClick: ()->Uni
         item{
             OvalButton(painterResource(R.drawable.location_city_24px), stringResource(R.string.city), onCityiesSettingClick)
         }
-        item{
+       /* item{
             OvalButton(painterResource(R.drawable.g_translate_24px), stringResource(R.string.language), onLanguageSettingClick)
-        }
+        }*/
         item{
             OvalButton(painterResource(R.drawable.info_24px), stringResource(R.string.about), onAboutClick)
         }
@@ -261,12 +269,15 @@ fun SettingsPage(listState: ScalingLazyListState, onCityiesSettingClick: ()->Uni
 @Composable
 fun CitiesList(context: Context) {
     var citiesList = listOf<String>("上海","南京","苏州","北京","天津","广州","深圳")
-    val selectedCity = remember { mutableStateOf<String?>(null) }
+    var selectedCity by remember { mutableStateOf<String>("上海") }
+    var showInputField by remember { mutableStateOf(false) }
     val state = rememberScalingLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) {
-        selectedCity.value = LolimiBusApi.getCity(context.dataStore)
+        selectedCity = LolimiBusApi.getCity(context.dataStore)
     }
 
     ScreenScaffold(
@@ -286,12 +297,84 @@ fun CitiesList(context: Context) {
                     Text(stringResource(R.string.city))
                 }
             }
+            item {
+                // 顯示輸入框
+                Card(
+                    onClick = { showInputField = !showInputField },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    if(showInputField)
+                    {
+                        TextField(
+                            value = selectedCity,
+                            onValueChange = { selectedCity = it },
+                            placeholder = { Text(stringResource(R.string.input_city_name))},
+                            textStyle = TextStyle(color = Color.White),
+                            modifier = Modifier.height(32.dp)
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Done, // 回車鍵顯示為「完成」
+                                keyboardType = KeyboardType.Text
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+
+                                    if(!selectedCity.isNullOrEmpty())
+                                    {
+                                        coroutineScope.launch {
+                                            LolimiBusApi.saveCity( context.dataStore, selectedCity.trim())
+                                        }
+                                    }
+
+                                    keyboardController?.hide()
+
+                                    showInputField = false
+                                }
+                            ),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                disabledTextColor = Color.White,
+                                cursorColor = Color.White,
+                                focusedLabelColor = Color.White,
+                                unfocusedLabelColor = Color.White,
+                                disabledLabelColor = Color.White,
+                                focusedBorderColor = Color.White,
+                                unfocusedBorderColor = Color.White,
+                                disabledBorderColor = Color.White,
+                                errorBorderColor = Color.Red,
+                                errorLabelColor = Color.Red,
+                                errorCursorColor = Color.Red,
+                                errorTextColor = Color.Red
+                            )
+                        )
+
+                        LaunchedEffect(Unit) {
+                            focusRequester.requestFocus()
+                            keyboardController?.show()
+                        }
+                    }
+                    else{
+                        Row(modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(selectedCity)
+                            Icon(painterResource(R.drawable.edit_24px), contentDescription = stringResource(R.string.edit))
+                        }
+
+                    }
+                }
+            }
             items(citiesList){ city->
 
                 ToggleChip(
-                    checked = selectedCity.value == city,
+                    checked = selectedCity == city,
                     onCheckedChange = {
-                        selectedCity.value = if (it) city else null
+                        selectedCity = if (it) city else "上海"
 
                         coroutineScope.launch {
                             LolimiBusApi.saveCity( context.dataStore, city?:"上海")
@@ -301,7 +384,7 @@ fun CitiesList(context: Context) {
                         Text(text = city, style = MaterialTheme.typography.body1)
                     },
                     toggleControl = {
-                        Checkbox(checked = selectedCity.value == city)
+                        Checkbox(checked = selectedCity == city)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -494,14 +577,14 @@ fun RoundToggleButton(state: Boolean, unToggledIcon: Painter, unToggledDescripti
 @Composable
 fun AddSiteList(listState: ScalingLazyListState, context: Context, onAddSite: () -> Unit, onItemClicked: (String, Boolean) -> Unit){
 
-    var inputText by remember { mutableStateOf("") }
+    var inputText by remember { mutableStateOf(" ") }
     var showInputField by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
     // 1. 建立一個標記，用來追蹤是否「曾經」獲得過焦點
     var hasGainedFocus by remember { mutableStateOf(false) }
-
+    var text by remember { mutableStateOf("") }
     var siteList = remember { mutableStateListOf<Site>() }
 
     LaunchedEffect(Unit){
@@ -510,7 +593,6 @@ fun AddSiteList(listState: ScalingLazyListState, context: Context, onAddSite: ()
         for(site in LolimiBusApi.getList(context.dataStore)){
             siteList.add(site)
         }
-
     }
 
     ScalingLazyColumn(modifier = Modifier.fillMaxSize(),
@@ -532,11 +614,10 @@ fun AddSiteList(listState: ScalingLazyListState, context: Context, onAddSite: ()
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
-                        var text by remember { mutableStateOf("") }
-                        OutlinedTextField(
+                        TextField(
                             value = text,
                             onValueChange = { text = it },
-                            modifier = Modifier
+                            modifier = Modifier.height(32.dp)
                                 .fillMaxWidth()
                                 .focusRequester(focusRequester).onFocusChanged{ focusState ->
                                     if (focusState.isFocused) {
@@ -553,20 +634,42 @@ fun AddSiteList(listState: ScalingLazyListState, context: Context, onAddSite: ()
                             ),
                             keyboardActions = KeyboardActions(
                                 onDone = {
-                                    inputText = text
+                                    inputText = text.trim()
 
                                     keyboardController?.hide()
-                                    siteList.add(Site(inputText, false))
 
-                                    coroutineScope.launch {
-                                        LolimiBusApi.saveList( context.dataStore, siteList)
+                                    if(!inputText.isNullOrEmpty())
+                                    {
+                                        siteList.add(Site(inputText, false))
+
+                                        coroutineScope.launch {
+                                            LolimiBusApi.saveList( context.dataStore, siteList)
+                                        }
                                     }
 
                                     showInputField = false
                                 }
                             ),
                             singleLine = true,
-                            placeholder = { Text(stringResource(R.string.input_site_name)) }
+                            placeholder = { Text(stringResource(R.string.input_site_name)) },
+                            textStyle = TextStyle(color = Color.White),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                disabledTextColor = Color.White,
+                                cursorColor = Color.White,
+                                focusedLabelColor = Color.White,
+                                unfocusedLabelColor = Color.White,
+                                disabledLabelColor = Color.White,
+                                focusedBorderColor = Color.White,
+                                unfocusedBorderColor = Color.White,
+                                disabledBorderColor = Color.White,
+                                errorBorderColor = Color.Red,
+                                errorLabelColor = Color.Red,
+                                errorCursorColor = Color.Red,
+                                errorTextColor = Color.Red
+                            )
+
                         )
 
                         // 3. 使用 LaunchedEffect 在 Composable 首次出現時請求焦點

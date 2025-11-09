@@ -20,4 +20,6 @@
     <string name="delete">Delete</string>
     <string name="about_content">Data source: lolimiAPI</string>
     <string name="developer">developer:</string>
+    <string name="input_city_name">Custom</string>
+    <string name="edit">Edit</string>
 </resources>

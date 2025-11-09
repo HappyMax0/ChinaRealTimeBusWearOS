@@ -17,4 +17,6 @@
     <string name="delete">刪除</string>
     <string name="about_content">資料來源桑帛雲API：</string>
     <string name="developer">作者：</string>
+    <string name="input_city_name">自訂</string>
+    <string name="edit">編輯</string>
 </resources>

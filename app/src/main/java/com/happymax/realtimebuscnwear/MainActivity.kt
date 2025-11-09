@@ -124,7 +124,7 @@ AppScaffold {
     ) {
         // TODO: build navigation graph
         composable("home") {
-            HomeScreen(LocalContext.current, { navController.navigate("search") }, { site, isReverse -> navController.navigate("site/${site}/${isReverse}")},{ navController.navigate("citiesList") })
+            HomeScreen(LocalContext.current, { navController.navigate("search") }, { site, isReverse -> navController.navigate("site/${site}/${isReverse}")},{ navController.navigate("citiesList") }, onAboutClick = { navController.navigate("about") })
         }
         composable("site/{site}/{reverse}") {
                 backStackEntry ->
@@ -138,12 +138,15 @@ AppScaffold {
         composable("citiesList"){
             CitiesList(LocalContext.current)
         }
+        composable("about"){
+            AboutScreen()
+        }
     }
 }
 }
 
 @Composable
-fun HomeScreen(context: Context, onAddSiteClick: () -> Unit, onSiteListItemClicked: (String, Boolean) -> Unit, onSelectCityClick:() -> Unit, viewModel: BusViewModel = viewModel()){
+fun HomeScreen(context: Context, onAddSiteClick: () -> Unit, onSiteListItemClicked: (String, Boolean) -> Unit, onSelectCityClick:() -> Unit, onAboutClick:() -> Unit, viewModel: BusViewModel = viewModel()){
     // 收集 ViewModel 中的 UI 狀態
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -213,7 +216,7 @@ fun HomeScreen(context: Context, onAddSiteClick: () -> Unit, onSiteListItemClick
                             }
                         }
                         1 -> AddSiteList(listState, context, onAddSiteClick, onSiteListItemClicked)
-                        2 -> SettingsPage(listState, onCityiesSettingClick = onSelectCityClick, {}, {})
+                        2 -> SettingsPage(listState, onCityiesSettingClick = onSelectCityClick, {}, onAboutClick)
                     }
                 }
 
@@ -301,6 +304,40 @@ fun CitiesList(context: Context) {
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun AboutScreen(){
+    val state = rememberScalingLazyListState()
+
+    ScreenScaffold(
+        scrollState = state,
+        contentPadding = contentPadding,
+        timeText = { TimeText() },
+        scrollIndicator = { ScrollIndicator(state) },
+        edgeButton = { /* 可选边缘按钮 */ }
+    ) { innerPadding ->
+        ScalingLazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = state,
+            contentPadding = innerPadding
+        ) {
+            item{
+                ListHeader{
+                    Text(stringResource(R.string.about))
+                }
+            }
+            item{
+                Column {
+                    Text(stringResource(R.string.about_content))
+                    Text("https://api.lolimi.cn/")
+                    Text(stringResource(R.string.developer))
+                    Text("HappyMax")
+                    Text("https://github.com/HappyMax0")
+                }
             }
         }
     }

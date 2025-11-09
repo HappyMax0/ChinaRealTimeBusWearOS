@@ -15,4 +15,6 @@
     <string name="bus_stop_list">公交站</string>
     <string name="input_site_name">输入站名</string>
     <string name="delete">删除</string>
+    <string name="about_content">数据来源桑帛云API：</string>
+    <string name="developer">作者：</string>
 </resources>

@@ -18,4 +18,6 @@
     <string name="bus_stop_list">Bus Stop</string>
     <string name="input_site_name">Input Site Name</string>
     <string name="delete">Delete</string>
+    <string name="about_content">Data source: lolimiAPI</string>
+    <string name="developer">developer:</string>
 </resources>

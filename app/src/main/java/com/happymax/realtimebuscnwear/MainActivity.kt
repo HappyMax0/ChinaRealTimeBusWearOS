@@ -124,7 +124,7 @@ AppScaffold {
     ) {
         // TODO: build navigation graph
         composable("home") {
-            HomeScreen(LocalContext.current, { navController.navigate("search") }, { site, isReverse -> navController.navigate("site/${site}/${isReverse}")},{ navController.navigate("citiesList") }, onAboutClick = { navController.navigate("about") })
+            HomeScreen(LocalContext.current, { navController.navigate("search") }, { site, isReverse -> navController.navigate("site/${site}/${isReverse}")},{ navController.navigate("citiesList") }, onLanguageSettingClick = { navController.navigate("language") }, onAboutClick = { navController.navigate("about") })
         }
         composable("site/{site}/{reverse}") {
                 backStackEntry ->
@@ -141,12 +141,15 @@ AppScaffold {
         composable("about"){
             AboutScreen()
         }
+        composable("language"){
+            LanguageScreen(LocalContext.current)
+        }
     }
 }
 }
 
 @Composable
-fun HomeScreen(context: Context, onAddSiteClick: () -> Unit, onSiteListItemClicked: (String, Boolean) -> Unit, onSelectCityClick:() -> Unit, onAboutClick:() -> Unit, viewModel: BusViewModel = viewModel()){
+fun HomeScreen(context: Context, onAddSiteClick: () -> Unit, onSiteListItemClicked: (String, Boolean) -> Unit, onSelectCityClick:() -> Unit, onLanguageSettingClick: () -> Unit, onAboutClick:() -> Unit, viewModel: BusViewModel = viewModel()){
     // 收集 ViewModel 中的 UI 狀態
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -216,7 +219,7 @@ fun HomeScreen(context: Context, onAddSiteClick: () -> Unit, onSiteListItemClick
                             }
                         }
                         1 -> AddSiteList(listState, context, onAddSiteClick, onSiteListItemClicked)
-                        2 -> SettingsPage(listState, onCityiesSettingClick = onSelectCityClick, {}, onAboutClick)
+                        2 -> SettingsPage(listState, onCityiesSettingClick = onSelectCityClick, onLanguageSettingClick, onAboutClick)
                     }
                 }
 
@@ -338,6 +341,60 @@ fun AboutScreen(){
                     Text("HappyMax")
                     Text("https://github.com/HappyMax0")
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun LanguageScreen(context: Context){
+    var languageList = listOf<String>("system", "en-us", "zh-cn", "zh-hk", "zh-mo", "zh-tw")
+    var selectedLanguage by remember { mutableStateOf<String>("system") }
+    val state = rememberScalingLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        selectedLanguage = LolimiBusApi.getLanguage(context.dataStore)
+    }
+
+    ScreenScaffold(
+        scrollState = state,
+        contentPadding = contentPadding,
+        timeText = { TimeText() },
+        scrollIndicator = { ScrollIndicator(state) },
+        edgeButton = { /* 可选边缘按钮 */ }
+    ) { innerPadding ->
+        ScalingLazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = state,
+            contentPadding = innerPadding
+        ) {
+            item{
+                ListHeader{
+                    Text(stringResource(R.string.language))
+                }
+            }
+            items(languageList){ lang->
+
+                ToggleChip(
+                    checked = selectedLanguage == lang,
+                    onCheckedChange = {
+                        selectedLanguage = if (it) lang else "system"
+
+                        coroutineScope.launch {
+                            LolimiBusApi.saveLanguage( context.dataStore, selectedLanguage)
+                        }
+                    },
+                    label = {
+                        Text(text = lang, style = MaterialTheme.typography.body1)
+                    },
+                    toggleControl = {
+                        Checkbox(checked = selectedLanguage == lang)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                )
             }
         }
     }

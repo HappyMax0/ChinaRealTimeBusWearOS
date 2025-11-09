@@ -150,4 +150,31 @@ object LolimiBusApi {
 
         return city
     }
+
+    suspend fun saveLanguage(dataStore: DataStore<Preferences>, language: String) {
+        val key = stringPreferencesKey("LANGUAGE")
+        dataStore.edit { preferences ->
+            preferences[key] = language
+        }
+    }
+
+    suspend fun getLanguage(dataStore: DataStore<Preferences>): String {
+        val key = stringPreferencesKey("LANGUAGE")
+        val siteFlow: Flow<String> = dataStore.data.catch {
+            if (it is IOException) {
+                Log.e("API", "Error reading preferences.", it)
+                emit(emptyPreferences())
+            } else {
+                throw it
+            }
+        }.map { preferences ->
+            preferences[key] ?: "system"
+        }
+
+        val language = siteFlow.first()
+
+        Log.d("API", "language: ${language}")
+
+        return language
+    }
 }

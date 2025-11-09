@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">即時公車</string>
+    <string name="search">搜尋</string>
+    <string name="searchSomeThing">键入關鍵字</string>
+    <string name="nearby">周遭</string>
+    <string name="settings">設定</string>
+    <string name="favorite">收藏</string>
+    <string name="unFavorite">取消收藏</string>
+    <string name="forward">正向</string>
+    <string name="reverse">反向</string>
+    <string name="city">城市</string>
+    <string name="language">語言</string>
+    <string name="about">關於</string>
+    <string name="bus_stop_list">公車站</string>
+    <string name="input_site_name">键入站名</string>
+    <string name="delete">刪除</string>
+</resources>

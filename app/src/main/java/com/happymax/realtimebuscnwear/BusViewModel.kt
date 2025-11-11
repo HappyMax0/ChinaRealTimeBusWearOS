@@ -26,7 +26,7 @@ class BusViewModel() : ViewModel() {
 
     fun fetchBusListData(busList:List<LolimiBusApiParam>) {
         // 設置為加載狀態
-        _uiState.update { BusUiState.Loading }
+        //_uiState.update { BusUiState.Loading }
 
         // 在 ViewModel 的 CoroutineScope 中啟動協程
         viewModelScope.launch {

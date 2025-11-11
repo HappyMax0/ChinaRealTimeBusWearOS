@@ -7,25 +7,21 @@ package com.happymax.realtimebuscnwear
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,7 +40,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,7 +48,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.wear.compose.foundation.lazy.AutoCenteringParams
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
@@ -63,11 +57,8 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Card
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
-import androidx.wear.compose.material.Vignette
-import androidx.wear.compose.material.VignettePosition
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.HorizontalPageIndicator
 import androidx.wear.compose.material3.ListHeader
@@ -82,22 +73,20 @@ import com.happymax.realtimebuscnwear.theme.RealTimeBusCNTheme
 import androidx.wear.compose.material.*
 import kotlinx.coroutines.launch
 import android.content.Context
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.ime
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextField
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.wear.compose.foundation.lazy.ScalingLazyListState
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.ScrollIndicator
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlin.math.sin
+import java.util.Locale
 
 
 // At the top level of your kotlin file:
@@ -118,6 +107,37 @@ class MainActivity : ComponentActivity() {
                 WearApp()
             }
         }
+    }
+
+    override fun attachBaseContext(newBase: Context?) {
+        val sharedPref = newBase?.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val selectedLanguage = sharedPref?.getString("language", "system")
+        var locale: Locale? = null
+        if(selectedLanguage != null){
+            if(selectedLanguage == "en-us"){
+                locale = Locale("en", "US")
+            }
+            else if(selectedLanguage == "zh-cn"){
+                locale = Locale("zh", "CN")
+            }
+            else if(selectedLanguage == "zh-hk"){
+                locale = Locale("zh", "HK")
+            }
+            else if(selectedLanguage == "zh-mo"){
+                locale = Locale("zh", "MO")
+            }
+            else if(selectedLanguage == "zh-tw"){
+                locale = Locale("zh", "TW")
+            }
+        }
+
+        if(locale != null){
+            val context = LocaleManager.setLocale(newBase, locale)
+            if(context != null)
+                super.attachBaseContext(context)
+        }
+        else
+           super.attachBaseContext(newBase)
     }
 }
 
@@ -257,9 +277,9 @@ fun SettingsPage(listState: ScalingLazyListState, onCityiesSettingClick: ()->Uni
         item{
             OvalButton(painterResource(R.drawable.location_city_24px), stringResource(R.string.city), onCityiesSettingClick)
         }
-       /* item{
+        item{
             OvalButton(painterResource(R.drawable.g_translate_24px), stringResource(R.string.language), onLanguageSettingClick)
-        }*/
+        }
         item{
             OvalButton(painterResource(R.drawable.info_24px), stringResource(R.string.about), onAboutClick)
         }
@@ -432,13 +452,12 @@ fun AboutScreen(){
 @Composable
 fun LanguageScreen(context: Context){
     var languageList = listOf<String>("system", "en-us", "zh-cn", "zh-hk", "zh-mo", "zh-tw")
-    var selectedLanguage by remember { mutableStateOf<String>("system") }
+    var selectedLanguage by remember { mutableStateOf<String?>("system") }
     val state = rememberScalingLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        selectedLanguage = LolimiBusApi.getLanguage(context.dataStore)
-    }
+    val sharedPref = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    selectedLanguage = sharedPref.getString("language", "system")
 
     ScreenScaffold(
         scrollState = state,
@@ -465,7 +484,10 @@ fun LanguageScreen(context: Context){
                         selectedLanguage = if (it) lang else "system"
 
                         coroutineScope.launch {
-                            LolimiBusApi.saveLanguage( context.dataStore, selectedLanguage)
+                            sharedPref.edit()
+                                .putString("language", selectedLanguage)
+                                .apply() // 或使用 commit() 立即同步
+
                         }
                     },
                     label = {

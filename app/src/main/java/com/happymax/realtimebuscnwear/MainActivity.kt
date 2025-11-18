@@ -83,8 +83,6 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyListState
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.ScrollIndicator
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import java.util.Locale
 
@@ -194,7 +192,7 @@ fun HomeScreen(context: Context, onAddSiteClick: () -> Unit, onSiteListItemClick
             busList.add(LolimiBusApiParam(type = "json", // 範例參數
                 city = city,
                 line = site.name,
-                o = if(site.isReverse) "2" else "1" ))
+                o = if(site.isReverse) "2" else "" ))
         }
 
         while (true){

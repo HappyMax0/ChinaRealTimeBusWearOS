@@ -33,8 +33,15 @@ object LolimiBusApi {
             params += "type=" + URLEncoder.encode(type, "UTF-8") + "&"  // 默认返回text可写json/text
             params += "city=" + URLEncoder.encode(city, "UTF-8") + "&"  // 城市名称
             params += "line=" + URLEncoder.encode(line, "UTF-8") + "&"  // 车站名称
-            params += "o=" + URLEncoder.encode(o, "UTF-8") + "&"  // 写入2即可查询反方向
-            params = params.substring(0, params.length - 1)
+            if (o.isNotEmpty()) {
+                params += "o=" + URLEncoder.encode(o, "UTF-8")  + "&"
+            } // 写入2即可查询反方向
+
+            if (params.endsWith("&")) {
+                params = params.substring(0, params.length - 1)
+            }
+
+            Log.e("API", params)
 
             // 创建连接
             val conn = URL(url + "?" + params).openConnection() as HttpURLConnection

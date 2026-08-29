@@ -1,2 +1,3 @@
 # ChinaRealTimeBusWearOS
-A WearOS watch app used to view the arrival time of buses in People's Republic of China(Mainland)
+A phone app with wearOS app, search, faveourite, and view bus arrive time.
+一款手机应用，支持 Wear OS 应用、搜索、收藏以及查看公交车到站时间。

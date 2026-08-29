@@ -1,8 +1,6 @@
 package com.happymax.realtimebus.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,21 +14,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.BluetoothConnected
-import androidx.compose.material.icons.filled.BrightnessLow
-import androidx.compose.material.icons.filled.DirectionsBus
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Watch
-import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -43,10 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -151,243 +138,6 @@ fun WearCompanionTab(
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
-
-                    // Shape Controls & Ambient Switch
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            FilterChip(
-                                selected = watchShapeIsRound,
-                                onClick = { watchShapeIsRound = true },
-                                label = { Text("圆形表盘", fontSize = 12.sp) },
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            FilterChip(
-                                selected = !watchShapeIsRound,
-                                onClick = { watchShapeIsRound = false },
-                                label = { Text("方形表盘", fontSize = 12.sp) },
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                        }
-
-                        FilterChip(
-                            selected = isAmbientMode,
-                            onClick = { isAmbientMode = !isAmbientMode },
-                            label = { Text("常亮熄屏预览", fontSize = 11.sp) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.BrightnessLow,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                            },
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        // Live Smartwatch Frame Preview
-        item {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isAmbientMode) Color(0xFF0D0E11) else Color(0xFF14171F)
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("smartwatch_frame_card")
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(20.dp)
-                        .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "⌚ Wear OS 腕上独立应用实时预览",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF90CAF9)
-                    )
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // Physical Watch Bezel Container
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(310.dp)
-                            .clip(if (watchShapeIsRound) CircleShape else RoundedCornerShape(36.dp))
-                            .background(
-                                Brush.radialGradient(
-                                    colors = listOf(Color(0xFF2C3240), Color(0xFF0F1117))
-                                )
-                            )
-                            .border(
-                                width = 8.dp,
-                                color = Color(0xFF252933),
-                                shape = if (watchShapeIsRound) CircleShape else RoundedCornerShape(36.dp)
-                            )
-                            .padding(8.dp)
-                    ) {
-                        // Watch Screen Canvas
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(if (watchShapeIsRound) CircleShape else RoundedCornerShape(28.dp))
-                                .background(Color.Black)
-                                .padding(if (watchShapeIsRound) 24.dp else 16.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxSize(),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                // Watch Top Status Bar
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = currentTimeStr,
-                                        color = Color.White,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = FontFamily.Monospace
-                                    )
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            text = "92%",
-                                            color = Color.LightGray,
-                                            fontSize = 10.sp
-                                        )
-                                        Spacer(modifier = Modifier.width(2.dp))
-                                        Icon(
-                                            imageVector = Icons.Default.BatteryChargingFull,
-                                            contentDescription = null,
-                                            tint = Color(0xFF4CAF50),
-                                            modifier = Modifier.size(13.dp)
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                // Watch App Title
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.DirectionsBus,
-                                        contentDescription = null,
-                                        tint = Color(0xFF29B6F6),
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "高德公交 · 收藏",
-                                        color = Color(0xFFE0E0E0),
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(6.dp))
-
-                                // Scrollable Watch Content
-                                if (favorites.isEmpty()) {
-                                    Column(
-                                        modifier = Modifier.fillMaxSize(),
-                                        verticalArrangement = Arrangement.Center,
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Text(
-                                            text = "暂无收藏站点",
-                                            color = Color.Gray,
-                                            fontSize = 12.sp
-                                        )
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = "请在手机端添加",
-                                            color = Color.DarkGray,
-                                            fontSize = 10.sp
-                                        )
-                                    }
-                                } else {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .verticalScroll(rememberScrollState()),
-                                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        favorites.forEach { station ->
-                                            WatchStationItem(
-                                                station = station,
-                                                isAmbient = isAmbientMode
-                                            )
-                                        }
-
-                                        Spacer(modifier = Modifier.height(8.dp))
-
-                                        // Wrist Refresh Action
-                                        Box(
-                                            contentAlignment = Alignment.Center,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clip(RoundedCornerShape(12.dp))
-                                                .background(Color(0xFF1E222D))
-                                                .clickable(onClick = onManualRefresh)
-                                                .padding(vertical = 6.dp)
-                                        ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Refresh,
-                                                    contentDescription = null,
-                                                    tint = Color(0xFF81D4FA),
-                                                    modifier = Modifier.size(12.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(4.dp))
-                                                Text(
-                                                    text = "点击更新 (${refreshCountdown}s)",
-                                                    color = Color(0xFF81D4FA),
-                                                    fontSize = 10.sp,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-                                            }
-                                        }
-                                        Spacer(modifier = Modifier.height(16.dp))
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Haptic & Watch Control Hint
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.TouchApp,
-                            contentDescription = null,
-                            tint = Color.LightGray,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "支持表冠旋转滚动与触控微动刷新",
-                            fontSize = 12.sp,
-                            color = Color.LightGray
-                        )
-                    }
                 }
             }
         }

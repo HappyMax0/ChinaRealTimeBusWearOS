@@ -1,7 +1,6 @@
 package com.happymax.realtimebus.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,15 +35,17 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -55,13 +56,12 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.happymax.realtimebus.shared.model.BusLineInfo
 import com.happymax.realtimebus.shared.model.BusStation
 import com.happymax.realtimebus.ui.components.BusLineRowItem
-import com.happymax.realtimebus.ui.theme.TransitPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,50 +92,58 @@ fun SearchTab(
             .fillMaxSize()
             .testTag("search_tab_list"),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Search & City Header
+        // 搜索与城市筛选大卡片
         item {
             Card(
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(18.dp)
                 ) {
                     Text(
                         text = "查询公交站点",
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "输入站点名称或途经线路，即时检索高德公交数据并加星收藏",
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    // City Chips Row
+                    // 城市选择 Chip 滚动栏
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.LocationCity,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.LocationCity,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
                         cities.forEach { city ->
                             val isSelected = city == selectedCity
                             FilterChip(
@@ -144,37 +152,41 @@ fun SearchTab(
                                 label = {
                                     Text(
                                         text = city,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                     )
                                 },
-                                shape = RoundedCornerShape(10.dp),
+                                shape = CircleShape,
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = TransitPrimary,
-                                    selectedLabelColor = Color.White
+                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 ),
+                                border = null,
                                 modifier = Modifier.testTag("city_chip_$city")
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    // Search Input Box
-                    OutlinedTextField(
+                    // Material You 药丸形搜索框
+                    TextField(
                         value = searchQuery,
                         onValueChange = onSearchQueryChanged,
                         placeholder = {
                             Text(
-                                "搜索 $selectedCity 公交站名 (例: 中关村、德胜门、919路)...",
-                                fontSize = 13.sp
+                                text = "搜索 $selectedCity 公交站名 (例: 中关村、919路)...",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Search,
                                 contentDescription = null,
-                                tint = TransitPrimary,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
                         },
@@ -182,12 +194,13 @@ fun SearchTab(
                             if (searchQuery.isNotBlank()) {
                                 IconButton(
                                     onClick = { onSearchQueryChanged("") },
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(28.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Clear,
                                         contentDescription = "清除",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
                             }
@@ -200,11 +213,12 @@ fun SearchTab(
                                 onPerformSearch()
                             }
                         ),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = CircleShape,
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-                            focusedIndicatorColor = TransitPrimary,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
                         modifier = Modifier
@@ -212,47 +226,50 @@ fun SearchTab(
                             .testTag("search_station_input")
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    // Hot Presets
+                    // 热门预设标签
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "热门:",
-                            fontSize = 11.sp,
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         hotKeywords.forEach { keyword ->
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                modifier = Modifier
-                                    .clickable {
-                                        onSearchQueryChanged(keyword)
-                                        keyboardController?.hide()
-                                    }
-                                    .testTag("hot_keyword_$keyword")
-                            ) {
-                                Text(
-                                    text = keyword,
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
+                            SuggestionChip(
+                                onClick = {
+                                    onSearchQueryChanged(keyword)
+                                    keyboardController?.hide()
+                                    onPerformSearch()
+                                },
+                                label = {
+                                    Text(
+                                        text = keyword,
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                },
+                                shape = CircleShape,
+                                colors = SuggestionChipDefaults.suggestionChipColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    labelColor = MaterialTheme.colorScheme.onSurface
+                                ),
+                                border = null,
+                                modifier = Modifier.testTag("hot_keyword_$keyword")
+                            )
                         }
                     }
                 }
             }
         }
 
-        // Search State & Results Header
+        // 搜索状态与计数
         item {
             Row(
                 modifier = Modifier
@@ -264,53 +281,64 @@ fun SearchTab(
                 Text(
                     text = if (isSearching) "正在检索高德公交数据..."
                     else "搜索结果 (${searchResults.size} 个站点)",
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 if (isSearching) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp,
-                        color = TransitPrimary
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.5.dp,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
         }
 
-        // Search Results List
+        // 搜索结果列表
         if (searchResults.isEmpty() && !isSearching) {
             item {
                 Card(
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                     ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
                         modifier = Modifier
-                            .padding(24.dp)
+                            .padding(28.dp)
                             .fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.DirectionsBus,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.size(40.dp)
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            modifier = Modifier.size(56.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.DirectionsBus,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(14.dp))
                         Text(
                             text = "未找到相关站点",
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = "可尝试更换城市或简短关键词进行搜索",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
@@ -326,7 +354,7 @@ fun SearchTab(
         }
 
         item {
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
@@ -339,19 +367,19 @@ fun SearchResultStationCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = modifier
             .fillMaxWidth()
             .testTag("search_result_${station.id}")
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(18.dp)
         ) {
-            // Station Header & Favorite Action Button
+            // 站点头部：指示点、站名、城市 Tag、收藏操作按钮
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -359,47 +387,47 @@ fun SearchResultStationCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.weight(1f)
                 ) {
                     Box(
                         modifier = Modifier
                             .size(10.dp)
                             .clip(CircleShape)
-                            .background(TransitPrimary)
+                            .background(MaterialTheme.colorScheme.primary)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = station.name,
-                        fontSize = 17.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
                     Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = TransitPrimary.copy(alpha = 0.12f)
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer
                     ) {
                         Text(
                             text = station.city,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TransitPrimary,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                         )
                     }
                 }
 
-                // Favorite Toggle Button
+                // Material You 状态胶囊按钮
                 if (station.isFavorite) {
                     Button(
                         onClick = onToggleFavorite,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = CircleShape,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFA000)
+                            containerColor = Color(0xFFF59E0B),
+                            contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp),
                         modifier = Modifier
                             .height(34.dp)
                             .testTag("fav_btn_${station.id}")
@@ -407,22 +435,24 @@ fun SearchResultStationCard(
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = "已收藏",
-                            tint = Color.White,
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "已收藏",
-                            fontSize = 12.sp,
-                            color = Color.White,
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 } else {
-                    OutlinedButton(
+                    FilledTonalButton(
                         onClick = onToggleFavorite,
-                        shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        shape = CircleShape,
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp),
                         modifier = Modifier
                             .height(34.dp)
                             .testTag("fav_btn_${station.id}")
@@ -430,44 +460,45 @@ fun SearchResultStationCard(
                         Icon(
                             imageVector = Icons.Outlined.StarBorder,
                             contentDescription = "收藏站点",
-                            tint = TransitPrimary,
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "+ 收藏",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TransitPrimary
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
             }
 
+            // 地址描述
             if (station.address.isNotBlank()) {
-                Spacer(modifier = Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(top = 2.dp, bottom = 14.dp)
+                ) {
                     Icon(
                         imageVector = Icons.Outlined.Place,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(12.dp)
+                        modifier = Modifier.size(14.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = station.address,
-                        fontSize = 11.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
+            } else {
+                Spacer(modifier = Modifier.height(14.dp))
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Lines Preview
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            // 线路列表预览
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 station.lines.forEach { line ->
                     BusLineRowItem(
                         line = line,

@@ -85,7 +85,7 @@ data class RealtimeArrivalInfo(
     val statusText: String = "约 4 分钟到达",
     val statusType: ArrivalStatusType = ArrivalStatusType.ON_WAY,
     val crowdedness: CrowdednessLevel = CrowdednessLevel.COMFORTABLE,
-    val busPlate: String = "京A·88392",
+    val busPlate: String = "",
     val nextBusEtaMinutes: Int = 12
 )
 

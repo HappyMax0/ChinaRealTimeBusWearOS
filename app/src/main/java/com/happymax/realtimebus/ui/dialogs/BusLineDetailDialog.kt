@@ -37,7 +37,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -46,8 +45,6 @@ import com.happymax.realtimebus.shared.model.BusLineInfo
 import com.happymax.realtimebus.shared.model.BusStation
 import com.happymax.realtimebus.ui.components.ArrivalStatusBadge
 import com.happymax.realtimebus.ui.components.CrowdednessBadge
-import com.happymax.realtimebus.ui.theme.TransitPrimary
-import com.happymax.realtimebus.ui.theme.TransitSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,12 +77,12 @@ fun BusLineDetailBottomSheet(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(TransitPrimary)
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f))
                             .padding(horizontal = 10.dp, vertical = 6.dp)
                     ) {
                         Text(
                             text = line.lineShortName.ifBlank { line.lineName },
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         )
@@ -133,7 +130,7 @@ fun BusLineDetailBottomSheet(
                             Icon(
                                 imageVector = Icons.Default.DirectionsBus,
                                 contentDescription = null,
-                                tint = TransitPrimary,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -163,7 +160,7 @@ fun BusLineDetailBottomSheet(
                                 text = "${line.realtime.etaMinutes} 分钟",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = TransitPrimary
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
 
@@ -328,7 +325,7 @@ fun BusLineDetailBottomSheet(
                                     Icon(
                                         imageVector = Icons.Default.DirectionsBus,
                                         contentDescription = "车辆位置",
-                                        tint = TransitPrimary,
+                                        tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 } else {
@@ -337,8 +334,8 @@ fun BusLineDetailBottomSheet(
                                             .size(if (isTargetStation) 12.dp else 8.dp)
                                             .clip(CircleShape)
                                             .background(
-                                                if (isTargetStation) TransitSecondary
-                                                else MaterialTheme.colorScheme.outline
+                                                if (isTargetStation) MaterialTheme.colorScheme.primary // 动态主色高亮
+                                                else MaterialTheme.colorScheme.outlineVariant // 弱化普通站点
                                             )
                                     )
                                 }
@@ -348,21 +345,21 @@ fun BusLineDetailBottomSheet(
 
                             Text(
                                 text = stopName,
-                                fontSize = if (isTargetStation) 14.sp else 13.sp,
+                                style = if (isTargetStation) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodySmall,
                                 fontWeight = if (isTargetStation) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isTargetStation) TransitSecondary else MaterialTheme.colorScheme.onSurface
+                                color = if (isTargetStation) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                             )
 
                             if (isBusHere) {
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Surface(
-                                    color = TransitPrimary.copy(alpha = 0.15f),
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                                     shape = RoundedCornerShape(4.dp)
                                 ) {
                                     Text(
                                         text = "公交车在此",
                                         fontSize = 10.sp,
-                                        color = TransitPrimary,
+                                        color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                     )

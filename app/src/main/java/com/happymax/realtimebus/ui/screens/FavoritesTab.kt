@@ -1,6 +1,5 @@
 package com.happymax.realtimebus.ui.screens
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,30 +33,24 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.happymax.realtimebus.shared.model.BusLineInfo
 import com.happymax.realtimebus.shared.model.BusStation
 import com.happymax.realtimebus.ui.components.BusLineRowItem
 import com.happymax.realtimebus.ui.components.LiveRefreshCounterBadge
-import com.happymax.realtimebus.ui.theme.TransitPrimary
-import com.happymax.realtimebus.ui.theme.TransitSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,16 +73,16 @@ fun FavoritesTab(
             .fillMaxSize()
             .testTag("favorites_list"),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Top Header Banner with Realtime Status
+        // 顶部状态统计与快速筛选卡片
         item {
             Card(
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
@@ -101,25 +94,27 @@ fun FavoritesTab(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.DirectionsBus,
                                     contentDescription = null,
-                                    tint = TransitPrimary,
-                                    modifier = Modifier.size(22.dp)
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "常用收藏站点",
-                                    fontSize = 19.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = "已收藏 ${favorites.size} 个站点 · 共 $totalLines 条线路",
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -132,15 +127,16 @@ fun FavoritesTab(
                     }
 
                     if (favorites.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        // Filter input within favorites
-                        OutlinedTextField(
+                        Spacer(modifier = Modifier.height(14.dp))
+                        // Material You 药丸形搜索过滤框
+                        TextField(
                             value = filterQuery,
                             onValueChange = onFilterQueryChanged,
                             placeholder = {
                                 Text(
-                                    "在已收藏中快速筛选站点或线路号...",
-                                    fontSize = 13.sp
+                                    text = "在已收藏中快速筛选站点或线路号...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             },
                             leadingIcon = {
@@ -148,34 +144,35 @@ fun FavoritesTab(
                                     imageVector = Icons.Default.FilterList,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(20.dp)
                                 )
                             },
                             trailingIcon = {
                                 if (filterQuery.isNotBlank()) {
                                     IconButton(
                                         onClick = { onFilterQueryChanged("") },
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(28.dp)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Clear,
                                             contentDescription = "清除",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(18.dp)
                                         )
                                     }
                                 }
                             },
                             singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = CircleShape,
                             colors = TextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-                                focusedIndicatorColor = TransitPrimary,
+                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(50.dp)
                                 .testTag("favorites_filter_input")
                         )
                     }
@@ -183,79 +180,87 @@ fun FavoritesTab(
             }
         }
 
-        // Empty state or filtered empty state
+        // 空状态与搜索引导
         if (favorites.isEmpty()) {
             item {
                 Card(
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(28.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 24.dp)
+                        .padding(vertical = 16.dp)
                         .testTag("empty_favorites_card")
                 ) {
                     Column(
                         modifier = Modifier
-                            .padding(24.dp)
+                            .padding(28.dp)
                             .fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = TransitPrimary.copy(alpha = 0.12f),
-                            modifier = Modifier.size(64.dp)
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.size(68.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Outlined.Explore,
                                     contentDescription = null,
-                                    tint = TransitPrimary,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                     modifier = Modifier.size(32.dp)
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(18.dp))
 
                         Text(
                             text = if (filterQuery.isNotBlank()) "未找到匹配的收藏站点" else "暂无收藏站点",
-                            fontSize = 17.sp,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
                             text = if (filterQuery.isNotBlank()) "尝试清除筛选关键词查看所有收藏"
                             else "前往「搜索站点」查找您常用的公交站，点击星标即可快速添加至此，手表端亦将同步呈现！",
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                            lineHeight = 18.sp
+                            textAlign = TextAlign.Center
                         )
 
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
                         Button(
                             onClick = onNavigateToSearch,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = CircleShape,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = TransitPrimary
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             ),
+                            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
                             modifier = Modifier.testTag("go_to_search_btn")
                         ) {
-                            Icon(imageVector = Icons.Default.Search, contentDescription = null)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("立即去搜索并收藏")
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "立即去搜索并收藏",
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         }
                     }
                 }
             }
         } else {
-            // Station Cards List
+            // 收藏站点列表卡片
             items(favorites, key = { it.id }) { station ->
                 FavoriteStationCard(
                     station = station,
@@ -266,7 +271,7 @@ fun FavoritesTab(
         }
 
         item {
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
@@ -278,22 +283,20 @@ fun FavoriteStationCard(
     onLineClick: (BusLineInfo) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isExpanded by remember { mutableStateOf(true) }
-
     Card(
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = modifier
             .fillMaxWidth()
             .testTag("station_card_${station.id}")
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(18.dp)
         ) {
-            // Station Title & City Tag & Unfavorite Star
+            // 站点头部：指示圆点、站点名、城市胶囊、收藏星标
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -301,34 +304,37 @@ fun FavoriteStationCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.weight(1f)
                 ) {
+                    // 状态指示圆点
                     Box(
                         modifier = Modifier
                             .size(10.dp)
                             .clip(CircleShape)
-                            .background(TransitSecondary)
+                            .background(MaterialTheme.colorScheme.primary)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+
                     Text(
                         text = station.name,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // 城市胶囊 Tag
                     Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = TransitPrimary.copy(alpha = 0.12f)
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer
                     ) {
                         Text(
                             text = station.city,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TransitPrimary,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                         )
                     }
                 }
@@ -342,50 +348,53 @@ fun FavoriteStationCard(
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = "取消收藏",
-                        tint = Color(0xFFFFA000)
+                        tint = Color(0xFFF59E0B) // 柔和琥珀金
                     )
                 }
             }
 
+            // 地址描述
             if (station.address.isNotBlank()) {
-                Spacer(modifier = Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(top = 2.dp, bottom = 14.dp)
+                ) {
                     Icon(
                         imageVector = Icons.Outlined.Place,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(13.dp)
+                        modifier = Modifier.size(15.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = station.address,
-                        fontSize = 11.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
+            } else {
+                Spacer(modifier = Modifier.height(14.dp))
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Bus lines passing this stop
+            // 线路列表区域
             if (station.lines.isEmpty()) {
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = "暂无详细经停线路数据",
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(12.dp)
+                        modifier = Modifier.padding(14.dp)
                     )
                 }
             } else {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     station.lines.forEach { line ->
                         BusLineRowItem(

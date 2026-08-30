@@ -10,57 +10,37 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme =
-    darkColorScheme(
-        primary = TransitPrimaryDark,
-        onPrimary = TransitOnPrimaryDark,
-        primaryContainer = TransitPrimaryContainerDark,
-        onPrimaryContainer = TransitOnPrimaryContainerDark,
-        secondary = TransitSecondaryDark,
-        onSecondary = TransitOnSecondaryDark,
-        secondaryContainer = TransitSecondaryContainerDark,
-        onSecondaryContainer = TransitOnSecondaryContainerDark,
-        background = TransitBackgroundDark,
-        onBackground = TransitOnBackgroundDark,
-        surface = TransitSurfaceDark,
-        onSurface = TransitOnSurfaceDark,
-        surfaceVariant = TransitSurfaceVariantDark,
-        onSurfaceVariant = TransitOnSurfaceVariantDark,
-    )
+// 备用静态配色（用于 Android 11 及以下版本，或关闭动态取色时）
+private val DarkColorScheme = darkColorScheme(
+    primary = TransitPrimary,
+    secondary = TransitSecondary
+)
 
-private val LightColorScheme =
-    lightColorScheme(
-        primary = TransitPrimary,
-        onPrimary = TransitOnPrimary,
-        primaryContainer = TransitPrimaryContainer,
-        onPrimaryContainer = TransitOnPrimaryContainer,
-        secondary = TransitSecondary,
-        onSecondary = TransitOnSecondary,
-        secondaryContainer = TransitSecondaryContainer,
-        onSecondaryContainer = TransitOnSecondaryContainer,
-        background = TransitBackground,
-        onBackground = TransitOnBackground,
-        surface = TransitSurface,
-        onSurface = TransitOnSurface,
-        surfaceVariant = TransitSurfaceVariant,
-        onSurfaceVariant = TransitOnSurfaceVariant,
-    )
+private val LightColorScheme = lightColorScheme(
+    primary = TransitPrimary,
+    secondary = TransitSecondary
+)
 
 @Composable
 fun MyApplicationTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,
-    content: @Composable () -> Unit,
+    // 关键点：开启 dynamicColor（默认 Android 12+ 生效）
+    dynamicColor: Boolean = true,
+    content: @Composable () -> Unit
 ) {
-    val colorScheme =
-        when {
-            dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                val context = LocalContext.current
-                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-            }
-            darkTheme -> DarkColorScheme
-            else -> LightColorScheme
+    val colorScheme = when {
+        // Android 12 (API 31) 及以上系统支持从系统壁纸动态取色 (Material You)
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            val context = LocalContext.current
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
+        darkTheme -> DarkColorScheme
+        else -> LightColorScheme
+    }
 
-    MaterialTheme(colorScheme = colorScheme, typography = Typography, content = content)
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography, // 确保有默认 Typography
+        content = content
+    )
 }

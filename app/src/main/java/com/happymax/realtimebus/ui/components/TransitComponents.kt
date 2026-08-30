@@ -1,12 +1,9 @@
 package com.happymax.realtimebus.ui.components
 
-
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,13 +18,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DirectionsBus
-import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material.icons.outlined.Place
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -38,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -52,7 +43,6 @@ import com.happymax.realtimebus.ui.theme.BusArrivalFast
 import com.happymax.realtimebus.ui.theme.BusArrivalModerate
 import com.happymax.realtimebus.ui.theme.BusArrivalSoon
 import com.happymax.realtimebus.ui.theme.BusNightMode
-import com.happymax.realtimebus.ui.theme.TransitPrimary
 
 @Composable
 fun ArrivalStatusBadge(
@@ -171,12 +161,12 @@ fun BusLineRowItem(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(TransitPrimary)
+                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f))
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = line.lineShortName.ifBlank { line.lineName },
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp
                     )

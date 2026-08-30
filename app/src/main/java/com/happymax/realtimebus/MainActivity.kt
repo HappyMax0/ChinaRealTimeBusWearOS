@@ -36,6 +36,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.LaunchedEffect
@@ -90,40 +91,25 @@ class MainActivity : ComponentActivity() {
                     topBar = {
                         CenterAlignedTopAppBar(
                             title = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(CircleShape)
-                                            .background(TransitPrimary)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.DirectionsBus,
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "实时共交",
-                                        fontWeight = FontWeight.ExtraBold,
-                                        fontSize = 18.sp,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
+                                Text(
+                                    text = when (selectedTabIndex) {
+                                        0 -> "收藏站点"
+                                        1 -> "搜索站点"
+                                        else -> "手表端同步"
+                                    },
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
                             },
-                            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.surface
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
                             ),
                             modifier = Modifier.testTag("main_top_app_bar")
                         )
                     },
                     bottomBar = {
                         NavigationBar(
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            tonalElevation = 6.dp,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
                             modifier = Modifier.testTag("main_navigation_bar")
                         ) {
                             NavigationBarItem(
@@ -135,11 +121,16 @@ class MainActivity : ComponentActivity() {
                                         contentDescription = "收藏站点"
                                     )
                                 },
-                                label = { Text("收藏站点", fontWeight = if (selectedTabIndex == 0) FontWeight.Bold else FontWeight.Normal) },
+                                label = {
+                                    Text("收藏站点",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (selectedTabIndex == 0) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = TransitPrimary,
-                                    selectedTextColor = TransitPrimary,
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 ),
                                 modifier = Modifier.testTag("tab_favorites")
                             )
@@ -153,11 +144,17 @@ class MainActivity : ComponentActivity() {
                                         contentDescription = "搜索站点"
                                     )
                                 },
-                                label = { Text("搜索站点", fontWeight = if (selectedTabIndex == 1) FontWeight.Bold else FontWeight.Normal) },
+                                label = {
+                                    Text("搜索站点",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = if (selectedTabIndex == 1) FontWeight.Bold else FontWeight.Normal)
+                                        },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = TransitPrimary,
-                                    selectedTextColor = TransitPrimary,
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 ),
                                 modifier = Modifier.testTag("tab_search")
                             )
@@ -171,11 +168,15 @@ class MainActivity : ComponentActivity() {
                                         contentDescription = "手表端预览"
                                     )
                                 },
-                                label = { Text("手表端 (WearOS)", fontWeight = if (selectedTabIndex == 2) FontWeight.Bold else FontWeight.Normal) },
+                                label = { Text("手表端 (WearOS)",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (selectedTabIndex == 2) FontWeight.Bold else FontWeight.Normal) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = TransitPrimary,
-                                    selectedTextColor = TransitPrimary,
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 ),
                                 modifier = Modifier.testTag("tab_wear")
                             )
@@ -184,7 +185,12 @@ class MainActivity : ComponentActivity() {
                     snackbarHost = { SnackbarHost(snackbarHostState) },
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
-                    Box(modifier = Modifier.padding(innerPadding)) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                            .padding(innerPadding)
+                    ) {
                         AnimatedContent(
                             targetState = selectedTabIndex,
                             transitionSpec = { fadeIn() togetherWith fadeOut() },

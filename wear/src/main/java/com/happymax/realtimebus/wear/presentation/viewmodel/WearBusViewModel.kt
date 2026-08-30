@@ -180,7 +180,7 @@ class WearBusViewModel(application: Application, private val repository: BusRepo
                         val stations = listAdapter.fromJson(jsonString) ?: emptyList()
                         // Update repository with the parsed stations to update favoriteStations Flow
                          for(station in stations) {
-                             repository.toggleFavorite(station)
+                             repository.addFavorite(station)
                          }
                     }
                 }

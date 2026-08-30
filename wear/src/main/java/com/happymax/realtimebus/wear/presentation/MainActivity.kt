@@ -19,6 +19,9 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -197,8 +200,14 @@ fun WatchStationCard(
     station: BusStation,
     modifier: Modifier = Modifier
 ) {
+    var isExpanded by remember { mutableStateOf(false) }
+
     Card(
-        onClick = { /* 查看详情 */ },
+        onClick = {
+            if (station.lines.size > 3) {
+                isExpanded = !isExpanded
+            }
+        },
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer
@@ -262,7 +271,9 @@ fun WatchStationCard(
                 )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    station.lines.forEach { line ->
+                    val displayLines = if (isExpanded) station.lines else station.lines.take(3)
+                    
+                    displayLines.forEach { line ->
                         val (textColor, timeText) = when (line.realtime.statusType) {
                             ArrivalStatusType.ARRIVING_SOON -> Pair(Color(0xFFFF8A80), "即将到站")
                             ArrivalStatusType.ON_WAY -> Pair(Color(0xFF81C784), "${line.realtime.etaMinutes}分 (${line.realtime.stopsAway}站)")
@@ -318,6 +329,18 @@ fun WatchStationCard(
                                 maxLines = 1
                             )
                         }
+                    }
+                    
+                    if (station.lines.size > 3) {
+                        Text(
+                            text = if (isExpanded) "点击收起" else "点击展开查看全部 (${station.lines.size})",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 2.dp),
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }

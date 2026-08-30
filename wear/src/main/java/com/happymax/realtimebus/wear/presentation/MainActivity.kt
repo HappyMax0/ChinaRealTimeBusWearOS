@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
@@ -261,7 +262,7 @@ fun WatchStationCard(
                 )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    station.lines.take(3).forEach { line ->
+                    station.lines.forEach { line ->
                         val (textColor, timeText) = when (line.realtime.statusType) {
                             ArrivalStatusType.ARRIVING_SOON -> Pair(Color(0xFFFF8A80), "即将到站")
                             ArrivalStatusType.ON_WAY -> Pair(Color(0xFF81C784), "${line.realtime.etaMinutes}分 (${line.realtime.stopsAway}站)")
@@ -274,27 +275,47 @@ fun WatchStationCard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // 线路名小徽章（使用 primary 强调色容器）
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.primary
+                            // 左侧：线路徽章 + 终点站（占据剩余宽度，防止挤压右侧时间）
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.weight(1f) // 核心：限制左侧宽度，保护右侧 timeText
                             ) {
+                                // 线路名小徽章
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer
+                                ) {
+                                    Text(
+                                        text = line.lineShortName.ifBlank { line.lineName },
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                                    )
+                                }
+
+                                // 终点站方向（小字号，最多 2 行，超出则省略）
                                 Text(
-                                    text = line.lineShortName.ifBlank { line.lineName },
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    text = "→${line.endStop}",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    lineHeight = 12.sp,
+                                    modifier = Modifier.weight(1f, fill = false)
                                 )
                             }
 
                             Spacer(modifier = Modifier.width(6.dp))
 
+                            // 右侧：到站时间（固定显示，绝不被挤出屏幕）
                             Text(
                                 text = timeText,
                                 color = textColor,
                                 style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
                             )
                         }
                     }

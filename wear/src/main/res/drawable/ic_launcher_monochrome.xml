@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 内部 66x66 安全显示区域，居中对齐 -->
+    <group
+        android:translateX="20"
+        android:translateY="20">
+
+        <!-- 合并所有路径并使用 evenOdd 填充类型，真正实现镂空 (cutout) 效果，兼容 Material You Theme Icon -->
+        <path
+            android:fillColor="#FF000000"
+            android:fillType="evenOdd"
+            android:pathData="
+                M26,10 A9,9 0 0,1 42,10 A2,2 0 0,1 40,13 A5,5 0 0,0 28,13 A2,2 0 0,1 26,10 Z
+                M18,18 C18,15 22,14 34,14 C46,14 50,15 50,18 L50,47 C50,50 47,52 45,52 L45,56 C45,57.1 43.9,58 42.5,58 L39.5,58 C38.1,58 37,57.1 37,56 L37,52 L31,52 L31,56 C31,57.1 29.9,58 28.5,58 L25.5,58 C24.1,58 23,57.1 23,56 L23,52 C21,52 18,50 18,47 Z
+                M23,21 L45,21 C46.1,21 47,21.9 47,23 L47,33 C47,34.1 46.1,35 45,35 L23,35 C21.9,35 21,34.1 21,33 L21,23 C21,21.9 21.9,21 23,21 Z
+                M25,44 A2.5,2.5 0 1,1 25,43.99 Z M43,44 A2.5,2.5 0 1,1 43,43.99 Z
+                M31,43 L37,43 C37.6,43 38,43.4 38,44 C38,44.6 37.6,45 37,45 L31,45 C30.4,45 30,44.6 30,44 C30,43.4 30.4,43 31,43 Z" />
+    </group>
+</vector>
